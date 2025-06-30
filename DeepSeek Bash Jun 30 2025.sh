@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Конфигурация (ваши данные)
+# Конфигурация
 TOKEN="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"
 USER="duoproduct"
 REPO_NAME="githubunihelper"
@@ -9,37 +9,34 @@ PROJECT_DIR="/Users/alexcreme/Documents/Extensions Development/KaitenUniHelper"
 # Переходим в директорию проекта
 cd "$PROJECT_DIR"
 
-# Инициализируем Git-репозиторий
-git init
-git branch -M main
+# Инициализируем Git (если не инициализирован)
+if [ ! -d .git ]; then
+    git init
+    git branch -M main
+fi
 
-# Добавляем все файлы (кроме указанных в .gitignore)
+# Удаляем существующий origin
+git remote remove origin 2> /dev/null
+
+# Добавляем все файлы
 git add .
 
-# Создаем коммит
-git commit -m "Initial commit: Safari Extension project"
+# Создаем коммит (если есть изменения)
+if [ -n "$(git status --porcelain)" ]; then
+    git commit -m "Update: $(date +'%Y-%m-%d %H:%M:%S')"
+fi
 
-# Создаем репозиторий через GitHub API
-API_URL="https://api.github.com/user/repos"
-curl -X POST \
-  -H "Authorization: token $TOKEN" \
-  -H "Accept: application/vnd.github.v3+json" \
-  -d '{
-        "name": "'"$REPO_NAME"'",
-        "private": true,
-        "auto_init": false
-      }' \
-  $API_URL
+# Устанавливаем правильный URL репозитория с токеном
+REPO_URL="https://$USER:$TOKEN@github.com/$USER/$REPO_NAME.git"
 
-# Добавляем удаленный репозиторий
-git remote add origin "https://$USER:$TOKEN@github.com/$USER/$REPO_NAME.git"
+# Принудительно пушим изменения
+git push -f "$REPO_URL" main
 
-# Пушим изменения
-git push -u origin main
-
-# Убираем токен из конфигурации (для безопасности)
-git remote set-url origin "https://github.com/$USER/$REPO_NAME.git"
+# Устанавливаем постоянный remote без токена
+git remote add origin "https://github.com/$USER/$REPO_NAME.git"
 
 echo ""
-echo "✅ Репозиторий успешно создан и код отправлен!"
+echo "========================================"
+echo "✅ Код успешно отправлен в репозиторий!"
 echo "🔗 Ссылка: https://github.com/$USER/$REPO_NAME"
+echo "========================================"
